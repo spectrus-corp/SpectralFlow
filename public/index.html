@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="SpectralFlow : un réseau social immersif mêlant flux vidéo YouTube, chat temps réel et esthétique cyberpunk néon." />
+    <meta name="theme-color" content="#060b1f" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta property="og:title" content="SpectralFlow" />
+    <meta property="og:description" content="Le réseau social cyberpunk pour partager vidéos et idées." />
+    <meta property="og:type" content="website" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <title>SpectralFlow — Réseau social cyberpunk</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module">
+      import('./assets/index.js').catch(err => {
+        console.error('Failed to load app:', err);
+        document.body.innerHTML = '<div style="padding: 20px; font-family: system-ui;">Erreur de chargement. Rafraîchis la page.</div>';
+      });
+    </script>
+  </body>
+</html>
