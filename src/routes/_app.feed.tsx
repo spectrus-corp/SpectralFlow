@@ -77,7 +77,11 @@ function FeedPage() {
       <div className="flex h-[calc(100svh-3rem)] items-center justify-center bg-black">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
+    );
+  }
 
+  if (posts.length === 0) {
+    return (
       <div className="flex h-[calc(100svh-3rem)] flex-col items-center justify-center gap-4 bg-gradient-to-b from-background to-card px-6 text-center">
         <Sparkles className="h-12 w-12 text-primary" />
         <h1 className="text-2xl font-bold">
