@@ -166,24 +166,39 @@ export type Database = {
       }
       posts: {
         Row: {
+          aspect_ratio: number | null
           content: string | null
           created_at: string
           id: string
+          media_type: string
+          media_url: string | null
+          thumbnail_url: string | null
           user_id: string
+          views: number
           youtube_url: string | null
         }
         Insert: {
+          aspect_ratio?: number | null
           content?: string | null
           created_at?: string
           id?: string
+          media_type?: string
+          media_url?: string | null
+          thumbnail_url?: string | null
           user_id: string
+          views?: number
           youtube_url?: string | null
         }
         Update: {
+          aspect_ratio?: number | null
           content?: string | null
           created_at?: string
           id?: string
+          media_type?: string
+          media_url?: string | null
+          thumbnail_url?: string | null
           user_id?: string
+          views?: number
           youtube_url?: string | null
         }
         Relationships: [
@@ -234,7 +249,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      increment_post_views: { Args: { p_post_id: string }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never

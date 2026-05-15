@@ -17,6 +17,7 @@ import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppProfileRouteImport } from './routes/_app.profile'
 import { Route as AppFeedRouteImport } from './routes/_app.feed'
 import { Route as AppChatRouteImport } from './routes/_app.chat'
+import { Route as AppPostPostIdRouteImport } from './routes/_app.post.$postId'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -57,6 +58,11 @@ const AppChatRoute = AppChatRouteImport.update({
   path: '/chat',
   getParentRoute: () => AppRoute,
 } as any)
+const AppPostPostIdRoute = AppPostPostIdRouteImport.update({
+  id: '/post/$postId',
+  path: '/post/$postId',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -66,6 +72,7 @@ export interface FileRoutesByFullPath {
   '/feed': typeof AppFeedRoute
   '/profile': typeof AppProfileRoute
   '/settings': typeof AppSettingsRoute
+  '/post/$postId': typeof AppPostPostIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -75,6 +82,7 @@ export interface FileRoutesByTo {
   '/feed': typeof AppFeedRoute
   '/profile': typeof AppProfileRoute
   '/settings': typeof AppSettingsRoute
+  '/post/$postId': typeof AppPostPostIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -86,6 +94,7 @@ export interface FileRoutesById {
   '/_app/feed': typeof AppFeedRoute
   '/_app/profile': typeof AppProfileRoute
   '/_app/settings': typeof AppSettingsRoute
+  '/_app/post/$postId': typeof AppPostPostIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -97,8 +106,17 @@ export interface FileRouteTypes {
     | '/feed'
     | '/profile'
     | '/settings'
+    | '/post/$postId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/signup' | '/chat' | '/feed' | '/profile' | '/settings'
+  to:
+    | '/'
+    | '/login'
+    | '/signup'
+    | '/chat'
+    | '/feed'
+    | '/profile'
+    | '/settings'
+    | '/post/$postId'
   id:
     | '__root__'
     | '/'
@@ -109,6 +127,7 @@ export interface FileRouteTypes {
     | '/_app/feed'
     | '/_app/profile'
     | '/_app/settings'
+    | '/_app/post/$postId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -176,6 +195,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppChatRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/post/$postId': {
+      id: '/_app/post/$postId'
+      path: '/post/$postId'
+      fullPath: '/post/$postId'
+      preLoaderRoute: typeof AppPostPostIdRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
@@ -184,6 +210,7 @@ interface AppRouteChildren {
   AppFeedRoute: typeof AppFeedRoute
   AppProfileRoute: typeof AppProfileRoute
   AppSettingsRoute: typeof AppSettingsRoute
+  AppPostPostIdRoute: typeof AppPostPostIdRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -191,6 +218,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppFeedRoute: AppFeedRoute,
   AppProfileRoute: AppProfileRoute,
   AppSettingsRoute: AppSettingsRoute,
+  AppPostPostIdRoute: AppPostPostIdRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
@@ -204,13 +232,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
