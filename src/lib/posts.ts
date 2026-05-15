@@ -35,7 +35,7 @@ export interface PublishPostPayload {
 
 const EMPTY_UUID = "00000000-0000-0000-0000-000000000000";
 
-export async function publishPost(userId: string, payload: PublishPostPayload) {
+export async function publishPost(userId: string, payload: PublishPostPayload): Promise<FeedPost> {
   const content = payload.content?.trim() || null;
   const youtube_url = payload.youtubeUrl?.trim() || null;
   const media_url = payload.mediaUrl?.trim() || null;
@@ -53,17 +53,41 @@ export async function publishPost(userId: string, payload: PublishPostPayload) {
     throw new Error("Lien YouTube invalide.");
   }
 
-  const { error } = await supabase.from("posts").insert({
-    user_id: userId,
-    content,
-    youtube_url,
-    media_url,
-    media_type,
-    thumbnail_url: payload.thumbnailUrl ?? null,
-    aspect_ratio: payload.aspectRatio ?? null,
-  });
+  const { data, error } = await supabase
+    .from("posts")
+    .insert({
+      user_id: userId,
+      content,
+      youtube_url,
+      media_url,
+      media_type,
+      thumbnail_url: payload.thumbnailUrl ?? null,
+      aspect_ratio: payload.aspectRatio ?? null,
+    })
+    .select(
+      "id,user_id,content,youtube_url,media_url,media_type,thumbnail_url,views,aspect_ratio,created_at,profile:profiles(username,display_name,avatar_url)",
+    )
+    .single();
 
   if (error) throw error;
+  if (!data) throw new Error("Impossible de récupérer le post publié.");
+
+  return {
+    id: data.id,
+    user_id: data.user_id,
+    content: data.content,
+    youtube_url: data.youtube_url,
+    media_url: data.media_url,
+    media_type: (data.media_type ?? "text") as MediaType,
+    thumbnail_url: data.thumbnail_url,
+    views: data.views ?? 0,
+    aspect_ratio: data.aspect_ratio ?? null,
+    created_at: data.created_at,
+    profile: data.profile,
+    likeCount: 0,
+    liked: false,
+    commentCount: 0,
+  };
 }
 
 export interface FetchFeedOptions {
