@@ -190,6 +190,7 @@ const Sidebar = React.forwardRef<
       return (
         <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
           <SheetContent
+            id="app-sidebar"
             data-sidebar="sidebar"
             data-mobile="true"
             className="w-(--sidebar-width) bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
@@ -212,6 +213,7 @@ const Sidebar = React.forwardRef<
 
     return (
       <div
+        id="app-sidebar"
         ref={ref}
         className="group peer hidden text-sidebar-foreground md:block"
         data-state={state}
@@ -261,7 +263,7 @@ const SidebarTrigger = React.forwardRef<
   React.ElementRef<typeof Button>,
   React.ComponentProps<typeof Button>
 >(({ className, onClick, ...props }, ref) => {
-  const { toggleSidebar } = useSidebar();
+  const { toggleSidebar, isMobile, open, openMobile } = useSidebar();
 
   return (
     <Button
@@ -270,6 +272,9 @@ const SidebarTrigger = React.forwardRef<
       variant="ghost"
       size="icon"
       className={cn("h-7 w-7", className)}
+      aria-controls="app-sidebar"
+      aria-expanded={isMobile ? openMobile : open}
+      title="Ouvrir le menu"
       onClick={(event) => {
         onClick?.(event);
         toggleSidebar();
@@ -277,7 +282,7 @@ const SidebarTrigger = React.forwardRef<
       {...props}
     >
       <PanelLeft />
-      <span className="sr-only">Toggle Sidebar</span>
+      <span className="sr-only">Basculer le menu</span>
     </Button>
   );
 });

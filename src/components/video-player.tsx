@@ -67,12 +67,26 @@ function NativeVideoPlayer({
     const v = ref.current;
     if (!v) return;
     if (active) {
-      v.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
+      const promise = v.play();
+      if (promise !== undefined) {
+        promise.then(() => setPlaying(true)).catch(() => setPlaying(false));
+      }
     } else {
       v.pause();
       setPlaying(false);
     }
   }, [active]);
+
+  useEffect(() => {
+    const v = ref.current;
+    if (!v || !active) return;
+    if (!playing) {
+      const promise = v.play();
+      if (promise !== undefined) {
+        promise.then(() => setPlaying(true)).catch(() => {});
+      }
+    }
+  }, [active, muted, playing]);
 
   const togglePlay = useCallback(() => {
     const v = ref.current;
@@ -121,18 +135,26 @@ function NativeVideoPlayer({
         src={src}
         poster={poster ?? undefined}
         loop
+        autoPlay
         playsInline
         muted={muted}
         preload={nearby ? "auto" : "metadata"}
         className="h-full w-full object-contain"
-        onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
+        onLoadedMetadata={(e) => {
+          setDuration(e.currentTarget.duration);
+          if (active) {
+            e.currentTarget.play().catch(() => {});
+          }
+        }}
         onTimeUpdate={onTimeUpdate}
         onPlay={() => {
           if (!playedOnce.current) {
             playedOnce.current = true;
             onFirstPlay?.();
           }
+          setPlaying(true);
         }}
+        onPause={() => setPlaying(false)}
       />
 
       {/* Big play/pause icon overlay */}
@@ -211,9 +233,14 @@ function YouTubePlayer({ ytId, active, muted, onToggleMute, onTap, poster, nearb
     <div className="relative h-full w-full bg-black">
       <iframe
         key={tick}
-        src={youTubeEmbedUrl(ytId, { autoplay: active, mute: muted, controls: true, loop: true })}
+        src={youTubeEmbedUrl(ytId, {
+          autoplay: active,
+          mute: muted,
+          controls: true,
+          loop: true,
+        })}
         title="YouTube video"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+        allow="autoplay; encrypted-media; clipboard-write; gyroscope; picture-in-picture; fullscreen"
         allowFullScreen
         className="absolute inset-0 h-full w-full"
       />
