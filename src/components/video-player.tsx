@@ -178,14 +178,16 @@ function NativeVideoPlayer({
   );
 }
 
-function YouTubePlayer({ ytId, active, muted, onToggleMute, onTap, poster }: YTProps) {
-  // Re-mount iframe each time activeness changes so autoplay reliably fires
+function YouTubePlayer({ ytId, active, muted, onToggleMute, onTap, poster, nearby }: YTProps) {
+  // Mount iframe as soon as the card is nearby (preload). Re-mount when active/mute
+  // toggles so YouTube re-applies autoplay+mute params reliably.
+  const shouldMount = active || nearby;
   const [tick, setTick] = useState(0);
   useEffect(() => {
     setTick((t) => t + 1);
   }, [active, muted]);
 
-  if (!active) {
+  if (!shouldMount) {
     return (
       <div
         className="relative h-full w-full bg-black"
@@ -209,7 +211,7 @@ function YouTubePlayer({ ytId, active, muted, onToggleMute, onTap, poster }: YTP
     <div className="relative h-full w-full bg-black">
       <iframe
         key={tick}
-        src={youTubeEmbedUrl(ytId, { autoplay: true, mute: muted, controls: true, loop: true })}
+        src={youTubeEmbedUrl(ytId, { autoplay: active, mute: muted, controls: true, loop: true })}
         title="YouTube video"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
         allowFullScreen
