@@ -11,6 +11,25 @@ import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_app/feed")({
   component: FeedPage,
+  head: () => ({
+    meta: [
+      { title: "Flux immersif — SpectralFlow" },
+      {
+        name: "description",
+        content:
+          "Le flux vidéo immersif de SpectralFlow : scrolle, like et commente les dernières vidéos partagées par la communauté.",
+      },
+      { property: "og:title", content: "Flux immersif — SpectralFlow" },
+      {
+        property: "og:description",
+        content:
+          "Scrolle un flux vidéo plein écran type TikTok, mêlant uploads et vidéos YouTube partagées en temps réel.",
+      },
+      { property: "og:url", content: "https://spectralflow.lovable.app/feed" },
+      { name: "robots", content: "noindex" },
+    ],
+    links: [{ rel: "canonical", href: "https://spectralflow.lovable.app/feed" }],
+  }),
 });
 
 function FeedPage() {
