@@ -35,6 +35,13 @@ export interface PublishPostPayload {
 
 const EMPTY_UUID = "00000000-0000-0000-0000-000000000000";
 
+/** Posts disappear from the feed after this window (48 hours). */
+export const FEED_WINDOW_MS = 48 * 60 * 60 * 1000;
+
+export function isWithinFeedWindow(createdAt: string): boolean {
+  return Date.now() - new Date(createdAt).getTime() < FEED_WINDOW_MS;
+}
+
 export async function publishPost(userId: string, payload: PublishPostPayload): Promise<FeedPost> {
   const content = payload.content?.trim() || null;
   const youtube_url = payload.youtubeUrl?.trim() || null;
