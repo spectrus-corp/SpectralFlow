@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { CreateVideoComposer } from "@/components/create-post";
 import { VideoCard } from "@/components/video-card";
-import { fetchFeedPosts, type FeedPost } from "@/lib/posts";
+import { fetchFeedPosts, fetchPostById, isWithinFeedWindow, type FeedPost } from "@/lib/posts";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_app/feed")({
@@ -22,10 +22,8 @@ function FeedPage() {
   const [muted, setMuted] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<Array<HTMLDivElement | null>>([]);
-
-  const addPost = useCallback((post: FeedPost) => {
-    setPosts((prev) => [post, ...prev]);
-  }, []);
+  const userIdRef = useRef<string | null>(null);
+  userIdRef.current = user?.id ?? null;
 
   const load = useCallback(async () => {
     try {
@@ -42,17 +40,90 @@ function FeedPage() {
     load();
   }, [load]);
 
-  // Realtime feed updates
+  // Auto-purge posts older than 48h every minute (no reload needed)
+  useEffect(() => {
+    const id = setInterval(() => {
+      setPosts((prev) => {
+        const next = prev.filter((p) => isWithinFeedWindow(p.created_at));
+        return next.length === prev.length ? prev : next;
+      });
+    }, 60_000);
+    return () => clearInterval(id);
+  }, []);
+
+  // Realtime: prepend new posts, update like counts, remove deleted ones — all live
   useEffect(() => {
     const channel = supabase
       .channel("feed-immersive")
-      .on("postgres_changes", { event: "*", schema: "public", table: "posts" }, () => load())
-      .on("postgres_changes", { event: "*", schema: "public", table: "likes" }, () => load())
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "posts" },
+        async (payload) => {
+          const newId = (payload.new as { id: string }).id;
+          setPosts((prev) => (prev.some((p) => p.id === newId) ? prev : prev));
+          try {
+            const post = await fetchPostById(newId, userIdRef.current);
+            if (!post || !isWithinFeedWindow(post.created_at)) return;
+            setPosts((prev) =>
+              prev.some((p) => p.id === post.id) ? prev : [post, ...prev],
+            );
+          } catch (e) {
+            console.error(e);
+          }
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "posts" },
+        (payload) => {
+          const id = (payload.old as { id: string }).id;
+          setPosts((prev) => prev.filter((p) => p.id !== id));
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "likes" },
+        (payload) => {
+          const row = (payload.new ?? payload.old) as { post_id: string; user_id: string };
+          if (!row?.post_id) return;
+          const delta = payload.eventType === "INSERT" ? 1 : -1;
+          setPosts((prev) =>
+            prev.map((p) =>
+              p.id === row.post_id
+                ? {
+                    ...p,
+                    likeCount: Math.max(0, p.likeCount + delta),
+                    liked:
+                      userIdRef.current && row.user_id === userIdRef.current
+                        ? payload.eventType === "INSERT"
+                        : p.liked,
+                  }
+                : p,
+            ),
+          );
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "comments" },
+        (payload) => {
+          const row = (payload.new ?? payload.old) as { post_id: string };
+          if (!row?.post_id) return;
+          const delta = payload.eventType === "INSERT" ? 1 : -1;
+          setPosts((prev) =>
+            prev.map((p) =>
+              p.id === row.post_id
+                ? { ...p, commentCount: Math.max(0, p.commentCount + delta) }
+                : p,
+            ),
+          );
+        },
+      )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [load]);
+  }, []);
 
   // IntersectionObserver — track which video is in view
   useEffect(() => {
