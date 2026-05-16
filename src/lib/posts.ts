@@ -72,7 +72,7 @@ export async function publishPost(userId: string, payload: PublishPostPayload): 
       aspect_ratio: payload.aspectRatio ?? null,
     })
     .select(
-      "id,user_id,content,youtube_url,media_url,media_type,thumbnail_url,views,aspect_ratio,created_at,profile:profiles(username,display_name,avatar_url)",
+      "id,user_id,content,youtube_url,media_url,media_type,thumbnail_url,views,aspect_ratio,created_at,profile:profiles!posts_user_id_fkey(username,display_name,avatar_url)",
     )
     .single();
 
@@ -112,7 +112,7 @@ export async function fetchFeedPosts(
   let query = supabase
     .from("posts")
     .select(
-      "id,user_id,content,youtube_url,media_url,media_type,thumbnail_url,views,aspect_ratio,created_at,profile:profiles(username,display_name,avatar_url)",
+      "id,user_id,content,youtube_url,media_url,media_type,thumbnail_url,views,aspect_ratio,created_at,profile:profiles!posts_user_id_fkey(username,display_name,avatar_url)",
     )
     .gte("created_at", since)
     .order("created_at", { ascending: false })
@@ -166,7 +166,7 @@ export async function fetchPostById(id: string, userId: string | null): Promise<
   const { data, error } = await supabase
     .from("posts")
     .select(
-      "id,user_id,content,youtube_url,media_url,media_type,thumbnail_url,views,aspect_ratio,created_at,profile:profiles(username,display_name,avatar_url)",
+      "id,user_id,content,youtube_url,media_url,media_type,thumbnail_url,views,aspect_ratio,created_at,profile:profiles!posts_user_id_fkey(username,display_name,avatar_url)",
     )
     .eq("id", id)
     .maybeSingle();
