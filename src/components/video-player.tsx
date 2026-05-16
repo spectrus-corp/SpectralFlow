@@ -48,6 +48,7 @@ function NativeVideoPlayer({
   onProgress,
   onFirstPlay,
   poster,
+  nearby,
 }: UploadProps) {
   const ref = useRef<HTMLVideoElement>(null);
   const [playing, setPlaying] = useState(false);
@@ -61,7 +62,7 @@ function NativeVideoPlayer({
     if (ref.current) ref.current.muted = muted;
   }, [muted]);
 
-  // Autoplay when active
+  // Autoplay when active, pause (but keep buffer) when not
   useEffect(() => {
     const v = ref.current;
     if (!v) return;
@@ -69,9 +70,7 @@ function NativeVideoPlayer({
       v.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
     } else {
       v.pause();
-      v.currentTime = 0;
       setPlaying(false);
-      setProgress(0);
     }
   }, [active]);
 
