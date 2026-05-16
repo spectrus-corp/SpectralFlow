@@ -210,7 +210,10 @@ export function VideoCard({ post, active, muted, onToggleMute, onChange }: Props
         {isMine && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="rounded-full bg-black/40 p-2 backdrop-blur-xl">
+              <button
+                className="rounded-full bg-black/40 p-2 backdrop-blur-xl"
+                aria-label="Plus d'options"
+              >
                 <MoreVertical className="h-5 w-5" />
               </button>
             </DropdownMenuTrigger>
@@ -376,11 +379,16 @@ function CommentsDrawer({
           ))}
         </div>
         <div className="mt-3 flex gap-2">
+          <label htmlFor={`comment-input-${postId}`} className="sr-only">
+            Ajouter un commentaire
+          </label>
           <Input
+            id={`comment-input-${postId}`}
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && send()}
             placeholder="Ajouter un commentaire…"
+            aria-label="Ajouter un commentaire"
           />
           <Button onClick={send} className="neon-glow">
             Envoyer
