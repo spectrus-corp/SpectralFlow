@@ -161,6 +161,7 @@ function UploadForm({ onPosted }: { onPosted: () => void }) {
               setThumbDataUrl(null);
             }}
             className="absolute right-2 top-2 rounded-full bg-black/70 p-1.5 text-white"
+            aria-label="Retirer la vidéo sélectionnée"
           >
             <X className="h-4 w-4" />
           </button>
@@ -171,12 +172,18 @@ function UploadForm({ onPosted }: { onPosted: () => void }) {
         type="file"
         accept="video/mp4,video/webm,video/quicktime"
         className="hidden"
+        aria-label="Sélectionner un fichier vidéo"
         onChange={(e) => e.target.files?.[0] && pickFile(e.target.files[0])}
       />
+      <label htmlFor="upload-caption" className="sr-only">
+        Légende
+      </label>
       <Textarea
+        id="upload-caption"
         rows={2}
         placeholder="Légende (optionnelle)…"
         className="resize-none"
+        aria-label="Légende"
         {...register("content")}
       />
       {errors.content && <p className="text-xs text-destructive">{errors.content.message}</p>}
@@ -228,7 +235,15 @@ function YouTubeForm({ onPosted }: { onPosted: () => void }) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
-      <Input placeholder="https://youtube.com/watch?v=…" {...register("youtubeUrl")} />
+      <label htmlFor="yt-url-input" className="sr-only">
+        Lien YouTube
+      </label>
+      <Input
+        id="yt-url-input"
+        placeholder="https://youtube.com/watch?v=…"
+        aria-label="Lien YouTube"
+        {...register("youtubeUrl")}
+      />
       {errors.youtubeUrl && (
         <p className="text-xs text-destructive">{errors.youtubeUrl.message}</p>
       )}
@@ -237,10 +252,15 @@ function YouTubeForm({ onPosted }: { onPosted: () => void }) {
           <img src={thumb} alt="Miniature YouTube" className="aspect-video w-full object-cover" />
         </div>
       )}
+      <label htmlFor="yt-caption" className="sr-only">
+        Légende
+      </label>
       <Textarea
+        id="yt-caption"
         rows={2}
         placeholder="Légende (optionnelle)…"
         className="resize-none"
+        aria-label="Légende"
         {...register("content")}
       />
       <Button type="submit" disabled={submitting} className="w-full neon-glow">

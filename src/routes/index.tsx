@@ -5,6 +5,27 @@ import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/")({
   component: Landing,
+  head: () => ({
+    meta: [
+      { title: "SpectralFlow — Flux vidéo cyberpunk & chat temps réel" },
+      {
+        name: "description",
+        content:
+          "Rejoins SpectralFlow, le réseau social cyberpunk : flux vidéo immersif type TikTok, partage YouTube en un clic et chat temps réel.",
+      },
+      {
+        property: "og:title",
+        content: "SpectralFlow — Flux vidéo cyberpunk & chat temps réel",
+      },
+      {
+        property: "og:description",
+        content:
+          "Le réseau social hybride pour la génération vidéo : flux immersif, YouTube et chat temps réel.",
+      },
+      { property: "og:url", content: "https://spectralflow.lovable.app/" },
+    ],
+    links: [{ rel: "canonical", href: "https://spectralflow.lovable.app/" }],
+  }),
 });
 
 function Landing() {
@@ -67,7 +88,7 @@ function Landing() {
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/15 text-primary">
                 <f.icon className="h-5 w-5" />
               </div>
-              <h3 className="mt-4 font-semibold">{f.title}</h3>
+              <h2 className="mt-4 text-base font-semibold">{f.title}</h2>
               <p className="mt-1 text-sm text-muted-foreground">{f.desc}</p>
             </div>
           ))}

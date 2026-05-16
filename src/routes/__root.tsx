@@ -77,22 +77,61 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content:
           "SpectralFlow : un réseau social immersif mêlant flux vidéo YouTube, chat temps réel et esthétique cyberpunk néon.",
       },
+      { property: "og:site_name", content: "SpectralFlow" },
       { property: "og:title", content: "SpectralFlow — Réseau social cyberpunk" },
-      { property: "og:description", content: "Cyber Flow is a hybrid social network for sharing YouTube videos, engaging in real-time chat, and managing user profiles." },
+      {
+        property: "og:description",
+        content:
+          "SpectralFlow est un réseau social hybride qui mêle flux vidéo immersif, partage YouTube et chat temps réel.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "SpectralFlow — Réseau social cyberpunk" },
+      {
+        name: "twitter:description",
+        content:
+          "SpectralFlow est un réseau social hybride qui mêle flux vidéo immersif, partage YouTube et chat temps réel.",
+      },
       { name: "theme-color", content: "#060b1f" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
-      { name: "twitter:title", content: "SpectralFlow — Réseau social cyberpunk" },
-      { name: "description", content: "Cyber Flow is a hybrid social network for sharing YouTube videos, engaging in real-time chat, and managing user profiles." },
-      { name: "twitter:description", content: "Cyber Flow is a hybrid social network for sharing YouTube videos, engaging in real-time chat, and managing user profiles." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/d396ce62-f64f-49e3-b701-f5f77a5e14ba/id-preview-b36659ad--8396a31c-5a2d-4c81-8c85-dba5524814b4.lovable.app-1778940846333.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/d396ce62-f64f-49e3-b701-f5f77a5e14ba/id-preview-b36659ad--8396a31c-5a2d-4c81-8c85-dba5524814b4.lovable.app-1778940846333.png" },
+      {
+        property: "og:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/d396ce62-f64f-49e3-b701-f5f77a5e14ba/id-preview-b36659ad--8396a31c-5a2d-4c81-8c85-dba5524814b4.lovable.app-1778940846333.png",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/d396ce62-f64f-49e3-b701-f5f77a5e14ba/id-preview-b36659ad--8396a31c-5a2d-4c81-8c85-dba5524814b4.lovable.app-1778940846333.png",
+      },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
       { rel: "manifest", href: "/manifest.webmanifest" },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "SpectralFlow",
+          url: "https://spectralflow.lovable.app",
+          description:
+            "Réseau social cyberpunk : flux vidéo immersif, YouTube et chat temps réel.",
+        }),
+      },
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          name: "SpectralFlow",
+          url: "https://spectralflow.lovable.app",
+          logo: "https://spectralflow.lovable.app/icon.svg",
+        }),
+      },
     ],
   }),
   shellComponent: RootShell,

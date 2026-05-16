@@ -9,6 +9,44 @@ import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_app/post/$postId")({
   component: PostPage,
+  head: ({ params }) => ({
+    meta: [
+      { title: `Post — SpectralFlow` },
+      {
+        name: "description",
+        content:
+          "Regarde ce post vidéo partagé sur SpectralFlow, le réseau social cyberpunk pour la génération vidéo.",
+      },
+      { property: "og:title", content: "Post vidéo — SpectralFlow" },
+      {
+        property: "og:description",
+        content: "Vidéo partagée sur SpectralFlow — flux immersif type TikTok.",
+      },
+      { property: "og:type", content: "article" },
+      {
+        property: "og:url",
+        content: `https://spectralflow.lovable.app/post/${params.postId}`,
+      },
+    ],
+    links: [
+      {
+        rel: "canonical",
+        href: `https://spectralflow.lovable.app/post/${params.postId}`,
+      },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "SocialMediaPosting",
+          url: `https://spectralflow.lovable.app/post/${params.postId}`,
+          identifier: params.postId,
+          publisher: { "@type": "Organization", name: "SpectralFlow" },
+        }),
+      },
+    ],
+  }),
 });
 
 function PostPage() {
@@ -54,6 +92,7 @@ function PostPage() {
 
   return (
     <div className="relative h-[calc(100svh-3rem)] w-full bg-black">
+      <h1 className="sr-only">Post vidéo SpectralFlow</h1>
       <button
         onClick={() => navigate({ to: "/feed" })}
         className="fixed left-4 top-4 z-40 flex h-10 w-10 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-xl"

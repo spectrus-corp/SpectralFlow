@@ -14,6 +14,23 @@ import { Label } from "@/components/ui/label";
 
 export const Route = createFileRoute("/signup")({
   component: SignupPage,
+  head: () => ({
+    meta: [
+      { title: "Créer un compte — SpectralFlow" },
+      {
+        name: "description",
+        content:
+          "Rejoins SpectralFlow et plonge dans un flux vidéo cyberpunk immersif avec chat temps réel et partage YouTube.",
+      },
+      { property: "og:title", content: "Créer un compte — SpectralFlow" },
+      {
+        property: "og:description",
+        content: "Inscription gratuite à SpectralFlow.",
+      },
+      { property: "og:url", content: "https://spectralflow.lovable.app/signup" },
+    ],
+    links: [{ rel: "canonical", href: "https://spectralflow.lovable.app/signup" }],
+  }),
 });
 
 const schema = z.object({

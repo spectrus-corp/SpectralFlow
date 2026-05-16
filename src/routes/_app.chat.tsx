@@ -18,6 +18,24 @@ import {
 
 export const Route = createFileRoute("/_app/chat")({
   component: ChatPage,
+  head: () => ({
+    meta: [
+      { title: "Messages — SpectralFlow" },
+      {
+        name: "description",
+        content:
+          "Discute en temps réel avec la communauté SpectralFlow via des messages privés synchronisés instantanément.",
+      },
+      { property: "og:title", content: "Messages — SpectralFlow" },
+      {
+        property: "og:description",
+        content: "Conversations privées en temps réel sur SpectralFlow.",
+      },
+      { property: "og:url", content: "https://spectralflow.lovable.app/chat" },
+      { name: "robots", content: "noindex" },
+    ],
+    links: [{ rel: "canonical", href: "https://spectralflow.lovable.app/chat" }],
+  }),
 });
 
 interface ConversationView {
@@ -129,6 +147,7 @@ function ChatPage() {
 
   return (
     <div className="flex h-[calc(100vh-3rem)]">
+      <h1 className="sr-only">Messagerie SpectralFlow</h1>
       {/* Conversation list */}
       <aside className="flex w-72 flex-col border-r border-border bg-card/40 backdrop-blur-xl">
         <div className="flex items-center justify-between border-b border-border p-3">
@@ -214,12 +233,17 @@ function ChatPage() {
               }}
               className="flex items-center gap-2 border-t border-border bg-card/40 p-3 backdrop-blur-xl"
             >
+              <label htmlFor="chat-message-input" className="sr-only">
+                Nouveau message
+              </label>
               <Input
+                id="chat-message-input"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Écris un message..."
+                aria-label="Nouveau message"
               />
-              <Button type="submit" size="icon" className="neon-glow">
+              <Button type="submit" size="icon" className="neon-glow" aria-label="Envoyer le message">
                 <Send className="h-4 w-4" />
               </Button>
             </form>
@@ -299,10 +323,15 @@ function NewChatDialog({ onCreated }: { onCreated: (id: string) => void }) {
           <DialogTitle>Nouveau chat</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
+          <label htmlFor="new-chat-username" className="sr-only">
+            Pseudo de l'utilisateur
+          </label>
           <Input
+            id="new-chat-username"
             placeholder="Pseudo de l'utilisateur"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
+            aria-label="Pseudo de l'utilisateur"
           />
           <Button onClick={create} disabled={busy} className="w-full">
             {busy ? "Création..." : "Démarrer la conversation"}

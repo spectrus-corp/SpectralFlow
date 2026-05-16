@@ -19,6 +19,24 @@ import {
 
 export const Route = createFileRoute("/_app/settings")({
   component: SettingsPage,
+  head: () => ({
+    meta: [
+      { title: "Paramètres — SpectralFlow" },
+      {
+        name: "description",
+        content:
+          "Gère ton compte SpectralFlow : mot de passe, langue, apparence et déconnexion.",
+      },
+      { property: "og:title", content: "Paramètres — SpectralFlow" },
+      {
+        property: "og:description",
+        content: "Préférences du compte SpectralFlow.",
+      },
+      { property: "og:url", content: "https://spectralflow.lovable.app/settings" },
+      { name: "robots", content: "noindex" },
+    ],
+    links: [{ rel: "canonical", href: "https://spectralflow.lovable.app/settings" }],
+  }),
 });
 
 function SettingsPage() {
@@ -88,7 +106,7 @@ function SettingsPage() {
 
       <Card title="Langue" icon={Globe}>
         <Select value={language} onValueChange={setLanguage}>
-          <SelectTrigger className="w-48">
+          <SelectTrigger className="w-48" aria-label="Sélection de la langue">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
