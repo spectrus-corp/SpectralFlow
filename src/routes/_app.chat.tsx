@@ -323,10 +323,15 @@ function NewChatDialog({ onCreated }: { onCreated: (id: string) => void }) {
           <DialogTitle>Nouveau chat</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
+          <label htmlFor="new-chat-username" className="sr-only">
+            Pseudo de l'utilisateur
+          </label>
           <Input
+            id="new-chat-username"
             placeholder="Pseudo de l'utilisateur"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
+            aria-label="Pseudo de l'utilisateur"
           />
           <Button onClick={create} disabled={busy} className="w-full">
             {busy ? "Création..." : "Démarrer la conversation"}
