@@ -194,6 +194,7 @@ function FeedPage() {
 
   return (
     <div className="relative h-[calc(100svh-4rem)] md:h-[calc(100svh-3rem)] w-full bg-black">
+      <h1 className="sr-only">Flux vidéo SpectralFlow</h1>
       <div
         ref={containerRef}
         className="h-full w-full snap-y snap-mandatory overflow-y-scroll scroll-smooth"
