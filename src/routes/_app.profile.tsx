@@ -13,6 +13,24 @@ import { Textarea } from "@/components/ui/textarea";
 
 export const Route = createFileRoute("/_app/profile")({
   component: ProfilePage,
+  head: () => ({
+    meta: [
+      { title: "Mon profil — SpectralFlow" },
+      {
+        name: "description",
+        content:
+          "Personnalise ton profil SpectralFlow : avatar, bio, chaîne YouTube et identité visuelle.",
+      },
+      { property: "og:title", content: "Mon profil — SpectralFlow" },
+      {
+        property: "og:description",
+        content: "Gère ton identité publique sur SpectralFlow.",
+      },
+      { property: "og:url", content: "https://spectralflow.lovable.app/profile" },
+      { name: "robots", content: "noindex" },
+    ],
+    links: [{ rel: "canonical", href: "https://spectralflow.lovable.app/profile" }],
+  }),
 });
 
 interface Profile {
