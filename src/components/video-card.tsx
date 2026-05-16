@@ -34,6 +34,7 @@ import { HeartBurst, type BurstPoint } from "./heart-burst";
 interface Props {
   post: FeedPost;
   active: boolean;
+  nearby?: boolean;
   muted: boolean;
   onToggleMute: () => void;
   onChange: () => void;
