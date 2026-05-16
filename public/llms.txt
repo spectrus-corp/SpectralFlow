@@ -1,0 +1,17 @@
+# SpectralFlow
+
+> Réseau social cyberpunk hybride mêlant flux vidéo immersif type TikTok, partage de vidéos YouTube et chat temps réel, dans une esthétique néon dark.
+
+SpectralFlow permet de publier des vidéos (upload direct ou embed YouTube), de scroller un flux vertical plein écran, de liker, commenter et partager des posts, et d'échanger en messagerie privée temps réel.
+
+## Pages
+
+- [Accueil](/): Présentation de SpectralFlow et inscription.
+- [Connexion](/login): Connexion à un compte existant.
+- [Inscription](/signup): Création d'un nouveau compte.
+
+## Optional
+
+- [Flux](/feed): Flux vidéo immersif (réservé aux membres connectés).
+- [Messages](/chat): Messagerie privée temps réel (réservé aux membres connectés).
+- [Profil](/profile): Profil utilisateur (réservé aux membres connectés).
