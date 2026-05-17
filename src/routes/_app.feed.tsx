@@ -38,7 +38,7 @@ function FeedPage() {
   const [loading, setLoading] = useState(true);
   const [composerOpen, setComposerOpen] = useState(false);
   const [activeIdx, setActiveIdx] = useState(0);
-  const [muted, setMuted] = useState(true);
+  
   const containerRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<Array<HTMLDivElement | null>>([]);
   const userIdRef = useRef<string | null>(null);
@@ -219,8 +219,6 @@ function FeedPage() {
               post={post}
               active={idx === activeIdx}
               nearby={Math.abs(idx - activeIdx) <= 1}
-              muted={muted}
-              onToggleMute={() => setMuted((m) => !m)}
               onChange={load}
             />
           </div>

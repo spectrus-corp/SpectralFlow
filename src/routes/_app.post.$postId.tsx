@@ -55,7 +55,7 @@ function PostPage() {
   const navigate = useNavigate();
   const [post, setPost] = useState<FeedPost | null>(null);
   const [loading, setLoading] = useState(true);
-  const [muted, setMuted] = useState(true);
+  
 
   const load = async () => {
     try {
@@ -100,13 +100,7 @@ function PostPage() {
       >
         <ArrowLeft className="h-5 w-5" />
       </button>
-      <VideoCard
-        post={post}
-        active
-        muted={muted}
-        onToggleMute={() => setMuted((m) => !m)}
-        onChange={load}
-      />
+      <VideoCard post={post} active onChange={load} />
     </div>
   );
 }
