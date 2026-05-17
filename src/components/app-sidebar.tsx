@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, MessageCircle, User, Settings, Zap, LogOut, Wrench } from "lucide-react";
+import { Bell, Home, MessageCircle, Settings, Star, User, Zap, LogOut, Wrench } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -17,6 +17,8 @@ import { useAuth } from "@/hooks/use-auth";
 const items = [
   { title: "Flux", url: "/feed", icon: Home },
   { title: "Chat", url: "/chat", icon: MessageCircle },
+  { title: "Abonnements", url: "/subscriptions", icon: Star },
+  { title: "Notifications", url: "/notifications", icon: Bell },
   { title: "Profil", url: "/profile", icon: User },
   { title: "Plugins", url: "/plugins", icon: Wrench },
   { title: "Paramètres", url: "/settings", icon: Settings },
@@ -71,9 +73,7 @@ export function AppSidebar() {
             <SidebarMenuButton onClick={() => signOut()} tooltip="Déconnexion">
               <LogOut className="h-5 w-5" />
               {!collapsed && (
-                <span className="truncate text-sm text-muted-foreground">
-                  {user?.email}
-                </span>
+                <span className="truncate text-sm text-muted-foreground">{user?.email}</span>
               )}
             </SidebarMenuButton>
           </SidebarMenuItem>

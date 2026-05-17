@@ -73,7 +73,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "SpectralFlow — Réseau social cyberpunk" },
-      { name: "keywords", content: "SpectralFlow, réseau social vidéo, chat en temps réel, YouTube, flux immersif, cyberpunk" },
+      {
+        name: "keywords",
+        content:
+          "SpectralFlow, réseau social vidéo, chat en temps réel, YouTube, flux immersif, cyberpunk",
+      },
       {
         name: "description",
         content:
@@ -121,8 +125,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "@type": "WebSite",
           name: "SpectralFlow",
           url: "https://spectralflow.lovable.app",
-          description:
-            "Réseau social cyberpunk : flux vidéo immersif, YouTube et chat temps réel.",
+          description: "Réseau social cyberpunk : flux vidéo immersif, YouTube et chat temps réel.",
         }),
       },
       {
@@ -159,7 +162,20 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <RootShellContent />
+      </AuthProvider>
+    </QueryClientProvider>
+  );
+}
+
+function RootShellContent() {
+  const { user } = useAuth();
   const router = useRouter();
+  const { queryClient } = Route.useRouteContext();
 
   useEffect(() => {
     const {
@@ -172,23 +188,79 @@ function RootComponent() {
   }, [router, queryClient]);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <NotificationListener />
-        <Outlet />
-        <Toaster />
-      </AuthProvider>
-    </QueryClientProvider>
+    <>
+      <NotificationRequestBanner user={user} />
+      <NotificationListener user={user} />
+      <Outlet />
+      <Toaster />
+    </>
   );
 }
 
-function NotificationListener() {
-  const { user } = useAuth();
+function NotificationRequestBanner({
+  user,
+}: {
+  user: import("@supabase/supabase-js").User | null;
+}) {
+  const [permission, setPermission] = useState<NotificationPermission>(
+    typeof window !== "undefined" && "Notification" in window ? Notification.permission : "denied",
+  );
 
+  useEffect(() => {
+    if (typeof window !== "undefined" && "Notification" in window) {
+      setPermission(Notification.permission);
+    }
+  }, []);
+
+  if (
+    !user ||
+    typeof window === "undefined" ||
+    !("Notification" in window) ||
+    permission !== "default"
+  ) {
+    return null;
+  }
+
+  const requestPermission = async () => {
+    const next = await Notification.requestPermission();
+    setPermission(next);
+    if (next === "granted") {
+      toast.success("SpectralFlow peut maintenant t'envoyer des notifications.");
+    } else if (next === "denied") {
+      toast.error("Notifications désactivées. Active-les dans le navigateur si tu changes d'avis.");
+    }
+  };
+
+  return (
+    <div className="sticky top-0 z-50 border-b border-border bg-card/95 p-4 backdrop-blur-xl">
+      <div className="mx-auto flex max-w-6xl flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div>
+          <p className="text-sm font-semibold">Active les notifications de SpectralFlow</p>
+          <p className="text-sm text-muted-foreground">
+            Autorise les notifications pour recevoir des alertes de messages et de nouveaux posts de
+            tes abonnements.
+          </p>
+        </div>
+        <button
+          onClick={requestPermission}
+          className="inline-flex items-center justify-center rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:brightness-110"
+        >
+          Autoriser les notifications
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function NotificationListener({ user }: { user: import("@supabase/supabase-js").User | null }) {
   useEffect(() => {
     if (!user) return;
 
-    if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "default") {
+    if (
+      typeof window !== "undefined" &&
+      "Notification" in window &&
+      Notification.permission === "default"
+    ) {
       Notification.requestPermission().catch(() => {});
     }
 
@@ -197,7 +269,11 @@ function NotificationListener() {
 
     const notify = (title: string, body: string) => {
       toast(title);
-      if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+      if (
+        typeof window !== "undefined" &&
+        "Notification" in window &&
+        Notification.permission === "granted"
+      ) {
         new Notification(title, { body });
       }
     };
@@ -218,22 +294,26 @@ function NotificationListener() {
 
     loadState();
 
-    const channel = supabase.channel(`notifications-${user.id}`)
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "posts" },
-        (payload) => {
-          const newPost = payload.new as { user_id: string; id: string };
-          if (!newPost || newPost.user_id === user.id) return;
-          if (!followedIds.has(newPost.user_id)) return;
-          notify("Nouveau post d'un abonnement", "Un utilisateur que tu suis vient de publier une nouvelle vidéo.");
-        },
-      )
+    const channel = supabase
+      .channel(`notifications-${user.id}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "posts" }, (payload) => {
+        const newPost = payload.new as { user_id: string; id: string };
+        if (!newPost || newPost.user_id === user.id) return;
+        if (!followedIds.has(newPost.user_id)) return;
+        notify(
+          "Nouveau post d'un abonnement",
+          "Un utilisateur que tu suis vient de publier une nouvelle vidéo.",
+        );
+      })
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "messages" },
         async (payload) => {
-          const message = payload.new as { conversation_id: string; sender_id: string; content: string };
+          const message = payload.new as {
+            conversation_id: string;
+            sender_id: string;
+            content: string;
+          };
           if (!message || message.sender_id === user.id) return;
           if (!conversationIds.has(message.conversation_id)) return;
 
@@ -260,7 +340,12 @@ function NotificationListener() {
       )
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "subscriptions", filter: `subscriber_id=eq.${user.id}` },
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "subscriptions",
+          filter: `subscriber_id=eq.${user.id}`,
+        },
         (payload) => {
           const subscription = payload.new as { target_id: string };
           if (subscription?.target_id) followedIds.add(subscription.target_id);
@@ -268,7 +353,12 @@ function NotificationListener() {
       )
       .on(
         "postgres_changes",
-        { event: "DELETE", schema: "public", table: "subscriptions", filter: `subscriber_id=eq.${user.id}` },
+        {
+          event: "DELETE",
+          schema: "public",
+          table: "subscriptions",
+          filter: `subscriber_id=eq.${user.id}`,
+        },
         (payload) => {
           const subscription = payload.old as { target_id: string };
           if (subscription?.target_id) followedIds.delete(subscription.target_id);

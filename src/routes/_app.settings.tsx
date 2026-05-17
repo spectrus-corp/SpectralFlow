@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Globe, LogOut, Moon, ShieldCheck } from "lucide-react";
+import { Bell, Globe, LogOut, Moon, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -24,8 +24,7 @@ export const Route = createFileRoute("/_app/settings")({
       { title: "Paramètres — SpectralFlow" },
       {
         name: "description",
-        content:
-          "Gère ton compte SpectralFlow : mot de passe, langue, apparence et déconnexion.",
+        content: "Gère ton compte SpectralFlow : mot de passe, langue, apparence et déconnexion.",
       },
       { property: "og:title", content: "Paramètres — SpectralFlow" },
       {
@@ -66,9 +65,44 @@ function SettingsPage() {
     navigate({ to: "/login" });
   };
 
+  const [permission, setPermission] = useState<NotificationPermission>(
+    typeof window !== "undefined" && "Notification" in window ? Notification.permission : "denied",
+  );
+
+  const requestNotificationPermission = async () => {
+    if (typeof window === "undefined" || !("Notification" in window)) {
+      toast.error("Notifications non supportées par ce navigateur.");
+      return;
+    }
+    const next = await Notification.requestPermission();
+    setPermission(next);
+    if (next === "granted") {
+      toast.success("Notifications activées !");
+    } else if (next === "denied") {
+      toast.error("Notification refusée. Tu peux changer ça dans les paramètres du navigateur.");
+    }
+  };
+
   return (
     <div className="mx-auto max-w-2xl space-y-6 px-4 py-6">
       <h1 className="text-2xl font-bold">Paramètres</h1>
+
+      <Card title="Notifications" icon={Bell}>
+        <div className="flex flex-col gap-3">
+          <p className="text-sm text-muted-foreground">
+            Active les notifications pour recevoir des alertes de nouveaux messages et des posts de
+            tes abonnements.
+          </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="rounded-full bg-primary/10 px-3 py-1 text-sm text-primary">
+              Statut : {permission}
+            </span>
+            <Button onClick={requestNotificationPermission} className="neon-glow">
+              {permission === "granted" ? "Déjà activé" : "Activer les notifications"}
+            </Button>
+          </div>
+        </div>
+      </Card>
 
       <Card title="Compte" icon={ShieldCheck}>
         <div className="space-y-2">

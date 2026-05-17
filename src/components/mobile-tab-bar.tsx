@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { Home, MessageCircle, User, Settings, Plus } from "lucide-react";
+import { Bell, Home, MessageCircle, User, Settings, Plus } from "lucide-react";
 
 const left = [
   { title: "Flux", url: "/feed", icon: Home },
@@ -7,9 +7,9 @@ const left = [
 ] as const;
 
 const right = [
+  { title: "Notifications", url: "/notifications", icon: Bell },
   { title: "Profil", url: "/profile", icon: User },
-  { title: "Réglages", url: "/settings", icon: Settings },
-] as const;
+];
 
 /**
  * Bottom tab bar (mobile only) — TikTok-style with a central "create" FAB.
@@ -70,7 +70,9 @@ function TabLink({
         active ? "text-primary" : "text-muted-foreground"
       }`}
     >
-      <item.icon className={`h-5 w-5 ${active ? "drop-shadow-[0_0_8px_var(--color-primary)]" : ""}`} />
+      <item.icon
+        className={`h-5 w-5 ${active ? "drop-shadow-[0_0_8px_var(--color-primary)]" : ""}`}
+      />
       <span>{item.title}</span>
     </Link>
   );
