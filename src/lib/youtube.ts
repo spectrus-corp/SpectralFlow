@@ -27,8 +27,12 @@ export function youTubeEmbedUrl(
     modestbranding: "1",
     playsinline: "1",
     autoplay: opts.autoplay ? "1" : "0",
-    mute: opts.mute ? "1" : "0",
+    // Always start muted — only muted autoplay is allowed without user gesture
+    // on iOS/Safari/Chrome mobile. Unmute is then triggered via postMessage.
+    mute: "1",
     controls: opts.controls === false ? "0" : "1",
+    enablejsapi: "1",
+    origin: typeof window !== "undefined" ? window.location.origin : "",
   });
   if (opts.loop) {
     params.set("loop", "1");
