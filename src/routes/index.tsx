@@ -8,6 +8,7 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "SpectralFlow — Flux vidéo cyberpunk & chat temps réel" },
+      { name: "keywords", content: "SpectralFlow, réseau social vidéo, chat en temps réel, YouTube, flux immersif, cyberpunk" },
       {
         name: "description",
         content:

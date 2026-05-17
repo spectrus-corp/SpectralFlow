@@ -72,11 +72,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "SpectralFlow — Réseau social cyberpunk" },
+      { name: "keywords", content: "SpectralFlow, réseau social vidéo, chat en temps réel, YouTube, flux immersif, cyberpunk" },
       {
         name: "description",
         content:
           "SpectralFlow : un réseau social immersif mêlant flux vidéo YouTube, chat temps réel et esthétique cyberpunk néon.",
       },
+      { property: "og:locale", content: "fr_FR" },
       { property: "og:site_name", content: "SpectralFlow" },
       { property: "og:title", content: "SpectralFlow — Réseau social cyberpunk" },
       {
