@@ -261,7 +261,7 @@ function YouTubePlayer({ ytId, active, onTap, onFirstPlay, poster, nearby }: YTP
         ref={iframeRef}
         src={youTubeEmbedUrl(ytId, {
           autoplay: true,
-          mute: false,
+          mute: true,
           controls: true,
           loop: true,
         })}

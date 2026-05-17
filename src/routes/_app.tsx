@@ -47,11 +47,11 @@ function AppLayout() {
             <Outlet />
           </main>
         </div>
-        {/* Floating sidebar toggle — always reachable, on every device */}
+        {/* Floating sidebar toggle — desktop / tablet only */}
         <button
           onClick={() => setSidebarHidden((v) => !v)}
           aria-label={sidebarHidden ? "Afficher la barre latérale" : "Cacher la barre latérale"}
-          className="fixed left-3 top-3 z-50 flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background/80 text-foreground shadow-md backdrop-blur-xl transition-transform hover:scale-105 active:scale-95"
+          className="hidden md:flex fixed left-3 top-3 z-50 flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background/80 text-foreground shadow-md backdrop-blur-xl transition-transform hover:scale-105 active:scale-95"
         >
           {sidebarHidden ? <PanelLeft className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
         </button>
