@@ -159,6 +159,16 @@ function Landing() {
                   "Discute en direct avec la communauté ou tes amis pour faire évoluer chaque publication en vraie conversation.",
               },
               {
+                title: "Communautés et hubs",
+                description:
+                  "Rejoins des espaces de discussion, trouve des groupes de fans et participe à des événements privés.",
+              },
+              {
+                title: "Collections & favoris",
+                description:
+                  "Enregistre tes vidéos préférées pour les retrouver facilement dans ton espace personnel.",
+              },
+              {
                 title: "Interface immersive",
                 description:
                   "Explore un flux vidéo en plein écran avec un design neon qui fait vibrer ton écran comme une vraie expérience showroom.",

@@ -7,6 +7,7 @@ import {
   MoreVertical,
   Trash2,
   Music2,
+  Bookmark,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -49,6 +50,7 @@ export function VideoCard({ post, active, nearby, onChange }: Props) {
   const [liked, setLiked] = useState(post.liked);
   const [likeCount, setLikeCount] = useState(post.likeCount);
   const [following, setFollowing] = useState(post.following ?? false);
+  const [saved, setSaved] = useState(false);
   const [bursts, setBursts] = useState<BurstPoint[]>([]);
   const [showComments, setShowComments] = useState(false);
   const tapTimer = useRef<number | null>(null);
@@ -59,6 +61,33 @@ export function VideoCard({ post, active, nearby, onChange }: Props) {
     setLikeCount(post.likeCount);
     setFollowing(post.following ?? false);
   }, [post.liked, post.likeCount, post.following]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = window.localStorage.getItem("sf:bookmarks");
+      const stored = raw ? (JSON.parse(raw) as string[]) : [];
+      setSaved(stored.includes(post.id));
+    } catch {
+      setSaved(false);
+    }
+  }, [post.id]);
+
+  const toggleSave = () => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = window.localStorage.getItem("sf:bookmarks");
+      const stored = raw ? (JSON.parse(raw) as string[]) : [];
+      const next = saved
+        ? stored.filter((id) => id !== post.id)
+        : [...new Set([...stored, post.id])];
+      window.localStorage.setItem("sf:bookmarks", JSON.stringify(next));
+      setSaved(!saved);
+      toast.success(saved ? "Supprimé des favoris" : "Ajouté aux favoris");
+    } catch {
+      toast.error("Impossible de modifier les favoris");
+    }
+  };
 
   const ytId = extractYouTubeId(post.youtube_url);
   const isVideo = post.media_type === "video" && !!post.media_url;
@@ -206,10 +235,12 @@ export function VideoCard({ post, active, nearby, onChange }: Props) {
           label={formatCount(post.commentCount)}
           onClick={() => setShowComments(true)}
         />
+        <ActionButton icon={<Share2 className="h-7 w-7" />} label="Partager" onClick={share} />
         <ActionButton
-          icon={<Share2 className="h-7 w-7" />}
-          label="Partager"
-          onClick={share}
+          icon={<Bookmark className={`h-7 w-7 ${saved ? "fill-primary text-primary" : ""}`} />}
+          label={saved ? "Favori" : "Sauvegarder"}
+          onClick={toggleSave}
+          active={saved}
         />
         <div className="flex flex-col items-center gap-1 text-xs">
           <Eye className="h-5 w-5 opacity-70" />
@@ -256,9 +287,7 @@ export function VideoCard({ post, active, nearby, onChange }: Props) {
           )}
         </div>
         {post.content && (
-          <p className="mt-3 line-clamp-3 text-sm leading-relaxed drop-shadow-md">
-            {post.content}
-          </p>
+          <p className="mt-3 line-clamp-3 text-sm leading-relaxed drop-shadow-md">{post.content}</p>
         )}
         {(isVideo || isYouTube) && (
           <div className="mt-3 flex items-center gap-2 text-xs opacity-80">
@@ -331,7 +360,12 @@ function CommentsDrawer({
 }) {
   const { user } = useAuth();
   const [comments, setComments] = useState<
-    { id: string; content: string; created_at: string; profile: { username: string; avatar_url: string | null } | null }[]
+    {
+      id: string;
+      content: string;
+      created_at: string;
+      profile: { username: string; avatar_url: string | null } | null;
+    }[]
   >([]);
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
@@ -339,11 +373,16 @@ function CommentsDrawer({
   const load = useCallback(async () => {
     setLoading(true);
     const { data } = await supabase
-      .from("comments")
+      .from<{
+        id: string;
+        content: string;
+        created_at: string;
+        profile: { username: string; avatar_url: string | null } | null;
+      }>("comments")
       .select("id,content,created_at,profile:profiles(username,avatar_url)")
       .eq("post_id", postId)
       .order("created_at", { ascending: true });
-    setComments((data as any) ?? []);
+    setComments(data ?? []);
     setLoading(false);
   }, [postId]);
 

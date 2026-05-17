@@ -319,7 +319,18 @@ function NotificationListener({ user }: { user: import("@supabase/supabase-js").
             content: string;
           };
           if (!message || message.sender_id === user.id) return;
-          if (!conversationIds.has(message.conversation_id)) return;
+
+          if (!conversationIds.has(message.conversation_id)) {
+            const { data: conversation } = await supabase
+              .from("conversations")
+              .select("id,user_a,user_b")
+              .eq("id", message.conversation_id)
+              .maybeSingle();
+
+            if (!conversation) return;
+            if (conversation.user_a !== user.id && conversation.user_b !== user.id) return;
+            conversationIds.add(conversation.id);
+          }
 
           const { data: profile } = await supabase
             .from("profiles")

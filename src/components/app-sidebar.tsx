@@ -1,5 +1,18 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Bell, Home, MessageCircle, Settings, Star, User, Zap, LogOut, Wrench } from "lucide-react";
+import {
+  Bell,
+  Bookmark,
+  Compass,
+  Home,
+  MessageCircle,
+  Settings,
+  Star,
+  User,
+  Zap,
+  LogOut,
+  Users,
+  Wrench,
+} from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -14,12 +27,17 @@ import {
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/use-auth";
 
-const items = [
+const primaryItems = [
   { title: "Flux", url: "/feed", icon: Home },
+  { title: "Découvrir", url: "/discover", icon: Compass },
   { title: "Chat", url: "/chat", icon: MessageCircle },
-  { title: "Abonnements", url: "/subscriptions", icon: Star },
   { title: "Notifications", url: "/notifications", icon: Bell },
-  { title: "Profil", url: "/profile", icon: User },
+] as const;
+
+const secondaryItems = [
+  { title: "Abonnements", url: "/subscriptions", icon: Star },
+  { title: "Communautés", url: "/communities", icon: Users },
+  { title: "Favoris", url: "/bookmarks", icon: Bookmark },
   { title: "Plugins", url: "/plugins", icon: Wrench },
   { title: "Paramètres", url: "/settings", icon: Settings },
 ] as const;
@@ -49,7 +67,26 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => {
+              {primaryItems.map((item) => {
+                const active = currentPath.startsWith(item.url);
+                return (
+                  <SidebarMenuItem key={item.url}>
+                    <SidebarMenuButton asChild isActive={active} tooltip={item.title}>
+                      <Link to={item.url} className="flex items-center gap-3">
+                        <item.icon className="h-5 w-5" />
+                        {!collapsed && <span>{item.title}</span>}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup className="mt-4">
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {secondaryItems.map((item) => {
                 const active = currentPath.startsWith(item.url);
                 return (
                   <SidebarMenuItem key={item.url}>

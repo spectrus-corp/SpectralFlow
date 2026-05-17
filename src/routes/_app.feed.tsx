@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Loader2, Plus, Sparkles } from "lucide-react";
 
@@ -39,7 +39,7 @@ function FeedPage() {
   const [composerOpen, setComposerOpen] = useState(false);
   const [activeIdx, setActiveIdx] = useState(0);
   const [muted, setMuted] = useState(true);
-  
+
   const containerRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<Array<HTMLDivElement | null>>([]);
   const userIdRef = useRef<string | null>(null);
@@ -91,61 +91,45 @@ function FeedPage() {
           try {
             const post = await fetchPostById(newId, userIdRef.current);
             if (!post || !isWithinFeedWindow(post.created_at)) return;
-            setPosts((prev) =>
-              prev.some((p) => p.id === post.id) ? prev : [post, ...prev],
-            );
+            setPosts((prev) => (prev.some((p) => p.id === post.id) ? prev : [post, ...prev]));
           } catch (e) {
             console.error(e);
           }
         },
       )
-      .on(
-        "postgres_changes",
-        { event: "DELETE", schema: "public", table: "posts" },
-        (payload) => {
-          const id = (payload.old as { id: string }).id;
-          setPosts((prev) => prev.filter((p) => p.id !== id));
-        },
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "likes" },
-        (payload) => {
-          const row = (payload.new ?? payload.old) as { post_id: string; user_id: string };
-          if (!row?.post_id) return;
-          const delta = payload.eventType === "INSERT" ? 1 : -1;
-          setPosts((prev) =>
-            prev.map((p) =>
-              p.id === row.post_id
-                ? {
-                    ...p,
-                    likeCount: Math.max(0, p.likeCount + delta),
-                    liked:
-                      userIdRef.current && row.user_id === userIdRef.current
-                        ? payload.eventType === "INSERT"
-                        : p.liked,
-                  }
-                : p,
-            ),
-          );
-        },
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "comments" },
-        (payload) => {
-          const row = (payload.new ?? payload.old) as { post_id: string };
-          if (!row?.post_id) return;
-          const delta = payload.eventType === "INSERT" ? 1 : -1;
-          setPosts((prev) =>
-            prev.map((p) =>
-              p.id === row.post_id
-                ? { ...p, commentCount: Math.max(0, p.commentCount + delta) }
-                : p,
-            ),
-          );
-        },
-      )
+      .on("postgres_changes", { event: "DELETE", schema: "public", table: "posts" }, (payload) => {
+        const id = (payload.old as { id: string }).id;
+        setPosts((prev) => prev.filter((p) => p.id !== id));
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "likes" }, (payload) => {
+        const row = (payload.new ?? payload.old) as { post_id: string; user_id: string };
+        if (!row?.post_id) return;
+        const delta = payload.eventType === "INSERT" ? 1 : -1;
+        setPosts((prev) =>
+          prev.map((p) =>
+            p.id === row.post_id
+              ? {
+                  ...p,
+                  likeCount: Math.max(0, p.likeCount + delta),
+                  liked:
+                    userIdRef.current && row.user_id === userIdRef.current
+                      ? payload.eventType === "INSERT"
+                      : p.liked,
+                }
+              : p,
+          ),
+        );
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "comments" }, (payload) => {
+        const row = (payload.new ?? payload.old) as { post_id: string };
+        if (!row?.post_id) return;
+        const delta = payload.eventType === "INSERT" ? 1 : -1;
+        setPosts((prev) =>
+          prev.map((p) =>
+            p.id === row.post_id ? { ...p, commentCount: Math.max(0, p.commentCount + delta) } : p,
+          ),
+        );
+      })
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
@@ -209,6 +193,26 @@ function FeedPage() {
 
   return (
     <div className="relative h-[calc(100svh-4rem)] md:h-[calc(100svh-3rem)] w-full bg-black">
+      <div className="absolute left-4 top-4 z-30 flex flex-wrap gap-2">
+        <Link
+          to="/discover"
+          className="rounded-full border border-border bg-black/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white transition hover:border-primary"
+        >
+          Explorer
+        </Link>
+        <Link
+          to="/communities"
+          className="rounded-full border border-border bg-black/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white transition hover:border-primary"
+        >
+          Communautés
+        </Link>
+        <Link
+          to="/bookmarks"
+          className="rounded-full border border-border bg-black/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white transition hover:border-primary"
+        >
+          Favoris
+        </Link>
+      </div>
       <h1 className="sr-only">Flux vidéo SpectralFlow</h1>
       <div
         ref={containerRef}

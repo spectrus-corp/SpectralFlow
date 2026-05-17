@@ -20,7 +20,10 @@ import { Route as AppProfileRouteImport } from './routes/_app.profile'
 import { Route as AppPluginsRouteImport } from './routes/_app.plugins'
 import { Route as AppNotificationsRouteImport } from './routes/_app.notifications'
 import { Route as AppFeedRouteImport } from './routes/_app.feed'
+import { Route as AppDiscoverRouteImport } from './routes/_app.discover'
+import { Route as AppCommunitiesRouteImport } from './routes/_app.communities'
 import { Route as AppChatRouteImport } from './routes/_app.chat'
+import { Route as AppBookmarksRouteImport } from './routes/_app.bookmarks'
 import { Route as AppPostPostIdRouteImport } from './routes/_app.post.$postId'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -77,9 +80,24 @@ const AppFeedRoute = AppFeedRouteImport.update({
   path: '/feed',
   getParentRoute: () => AppRoute,
 } as any)
+const AppDiscoverRoute = AppDiscoverRouteImport.update({
+  id: '/discover',
+  path: '/discover',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCommunitiesRoute = AppCommunitiesRouteImport.update({
+  id: '/communities',
+  path: '/communities',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppChatRoute = AppChatRouteImport.update({
   id: '/chat',
   path: '/chat',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppBookmarksRoute = AppBookmarksRouteImport.update({
+  id: '/bookmarks',
+  path: '/bookmarks',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPostPostIdRoute = AppPostPostIdRouteImport.update({
@@ -93,7 +111,10 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/bookmarks': typeof AppBookmarksRoute
   '/chat': typeof AppChatRoute
+  '/communities': typeof AppCommunitiesRoute
+  '/discover': typeof AppDiscoverRoute
   '/feed': typeof AppFeedRoute
   '/notifications': typeof AppNotificationsRoute
   '/plugins': typeof AppPluginsRoute
@@ -107,7 +128,10 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/bookmarks': typeof AppBookmarksRoute
   '/chat': typeof AppChatRoute
+  '/communities': typeof AppCommunitiesRoute
+  '/discover': typeof AppDiscoverRoute
   '/feed': typeof AppFeedRoute
   '/notifications': typeof AppNotificationsRoute
   '/plugins': typeof AppPluginsRoute
@@ -123,7 +147,10 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/_app/bookmarks': typeof AppBookmarksRoute
   '/_app/chat': typeof AppChatRoute
+  '/_app/communities': typeof AppCommunitiesRoute
+  '/_app/discover': typeof AppDiscoverRoute
   '/_app/feed': typeof AppFeedRoute
   '/_app/notifications': typeof AppNotificationsRoute
   '/_app/plugins': typeof AppPluginsRoute
@@ -139,7 +166,10 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/sitemap.xml'
+    | '/bookmarks'
     | '/chat'
+    | '/communities'
+    | '/discover'
     | '/feed'
     | '/notifications'
     | '/plugins'
@@ -153,7 +183,10 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/sitemap.xml'
+    | '/bookmarks'
     | '/chat'
+    | '/communities'
+    | '/discover'
     | '/feed'
     | '/notifications'
     | '/plugins'
@@ -168,7 +201,10 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/sitemap.xml'
+    | '/_app/bookmarks'
     | '/_app/chat'
+    | '/_app/communities'
+    | '/_app/discover'
     | '/_app/feed'
     | '/_app/notifications'
     | '/_app/plugins'
@@ -265,11 +301,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppFeedRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/discover': {
+      id: '/_app/discover'
+      path: '/discover'
+      fullPath: '/discover'
+      preLoaderRoute: typeof AppDiscoverRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/communities': {
+      id: '/_app/communities'
+      path: '/communities'
+      fullPath: '/communities'
+      preLoaderRoute: typeof AppCommunitiesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/chat': {
       id: '/_app/chat'
       path: '/chat'
       fullPath: '/chat'
       preLoaderRoute: typeof AppChatRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/bookmarks': {
+      id: '/_app/bookmarks'
+      path: '/bookmarks'
+      fullPath: '/bookmarks'
+      preLoaderRoute: typeof AppBookmarksRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/post/$postId': {
@@ -283,7 +340,10 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteChildren {
+  AppBookmarksRoute: typeof AppBookmarksRoute
   AppChatRoute: typeof AppChatRoute
+  AppCommunitiesRoute: typeof AppCommunitiesRoute
+  AppDiscoverRoute: typeof AppDiscoverRoute
   AppFeedRoute: typeof AppFeedRoute
   AppNotificationsRoute: typeof AppNotificationsRoute
   AppPluginsRoute: typeof AppPluginsRoute
@@ -294,7 +354,10 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppBookmarksRoute: AppBookmarksRoute,
   AppChatRoute: AppChatRoute,
+  AppCommunitiesRoute: AppCommunitiesRoute,
+  AppDiscoverRoute: AppDiscoverRoute,
   AppFeedRoute: AppFeedRoute,
   AppNotificationsRoute: AppNotificationsRoute,
   AppPluginsRoute: AppPluginsRoute,
