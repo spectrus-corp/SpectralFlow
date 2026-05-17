@@ -9,6 +9,7 @@ const left = [
 const right = [
   { title: "Notifications", url: "/notifications", icon: Bell },
   { title: "Profil", url: "/profile", icon: User },
+  { title: "Paramètres", url: "/settings", icon: Settings },
 ];
 
 /**
