@@ -6,8 +6,6 @@ import {
   Eye,
   MoreVertical,
   Trash2,
-  Volume2,
-  VolumeX,
   Music2,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -35,8 +33,6 @@ interface Props {
   post: FeedPost;
   active: boolean;
   nearby?: boolean;
-  muted: boolean;
-  onToggleMute: () => void;
   onChange: () => void;
 }
 
@@ -47,7 +43,7 @@ interface Props {
  * - side actions: like / comment / share / views
  * - comment drawer + delete (own posts)
  */
-export function VideoCard({ post, active, nearby, muted, onToggleMute, onChange }: Props) {
+export function VideoCard({ post, active, nearby, onChange }: Props) {
   const { user } = useAuth();
   const [liked, setLiked] = useState(post.liked);
   const [likeCount, setLikeCount] = useState(post.likeCount);
@@ -156,8 +152,6 @@ export function VideoCard({ post, active, nearby, muted, onToggleMute, onChange 
             src={post.media_url!}
             active={active}
             nearby={nearby}
-            muted={muted}
-            onToggleMute={onToggleMute}
             poster={poster}
             onFirstPlay={onFirstPlay}
           />
@@ -167,8 +161,6 @@ export function VideoCard({ post, active, nearby, muted, onToggleMute, onChange 
             ytId={ytId!}
             active={active}
             nearby={nearby}
-            muted={muted}
-            onToggleMute={onToggleMute}
             poster={poster}
             onFirstPlay={onFirstPlay}
           />
@@ -200,11 +192,6 @@ export function VideoCard({ post, active, nearby, muted, onToggleMute, onChange 
           icon={<Share2 className="h-7 w-7" />}
           label="Partager"
           onClick={share}
-        />
-        <ActionButton
-          icon={muted ? <VolumeX className="h-7 w-7" /> : <Volume2 className="h-7 w-7" />}
-          label={muted ? "Muet" : "Son"}
-          onClick={onToggleMute}
         />
         <div className="flex flex-col items-center gap-1 text-xs">
           <Eye className="h-5 w-5 opacity-70" />

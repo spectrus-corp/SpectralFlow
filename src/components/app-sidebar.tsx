@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, MessageCircle, User, Settings, Zap, LogOut } from "lucide-react";
+import { Home, MessageCircle, User, Settings, Zap, LogOut, Wrench } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -18,6 +18,7 @@ const items = [
   { title: "Flux", url: "/feed", icon: Home },
   { title: "Chat", url: "/chat", icon: MessageCircle },
   { title: "Profil", url: "/profile", icon: User },
+  { title: "Plugins", url: "/plugins", icon: Wrench },
   { title: "Paramètres", url: "/settings", icon: Settings },
 ] as const;
 

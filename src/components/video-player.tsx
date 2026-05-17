@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { Play, Pause, Volume2, VolumeX, Maximize2 } from "lucide-react";
+import { Play, Pause, Maximize2 } from "lucide-react";
 import { youTubeEmbedUrl } from "@/lib/youtube";
+import { isSoundEnabled, onSoundEnable } from "@/lib/sound";
 
 interface BaseProps {
   active: boolean;
-  muted: boolean;
-  onToggleMute: () => void;
   onTap?: () => void;
   onProgress?: (pct: number) => void;
   onFirstPlay?: () => void;
@@ -27,12 +26,9 @@ interface YTProps extends BaseProps {
 export type VideoPlayerProps = UploadProps | YTProps;
 
 /**
- * Unified, cross-device immersive video player.
- *
- * Cross-browser autoplay rules respected:
- * - Native <video>: must be muted + playsInline + autoplay attribute for iOS Safari.
- * - YouTube iframe: must start with mute=1; we toggle sound via the IFrame
- *   JS API postMessage protocol (no remount, no playback restart).
+ * Cross-device immersive video player. NO mute UI: every video starts muted
+ * (required by mobile autoplay policies), then unmutes globally as soon as
+ * the user makes any gesture on the page (see lib/sound.ts).
  */
 export function VideoPlayer(props: VideoPlayerProps) {
   if (props.kind === "youtube") return <YouTubePlayer {...props} />;
@@ -44,8 +40,6 @@ export function VideoPlayer(props: VideoPlayerProps) {
 function NativeVideoPlayer({
   src,
   active,
-  muted,
-  onToggleMute,
   onTap,
   onProgress,
   onFirstPlay,
@@ -59,31 +53,28 @@ function NativeVideoPlayer({
   const [showControlOverlay, setShowControlOverlay] = useState(false);
   const playedOnce = useRef(false);
 
-  // Imperative mute sync — set before any play() call so iOS accepts autoplay.
+  // Sync mute to the global "sound enabled" gate.
   useEffect(() => {
-    const v = ref.current;
-    if (!v) return;
-    v.muted = muted;
-    if (muted) v.setAttribute("muted", "");
-    else v.removeAttribute("muted");
-  }, [muted]);
+    const apply = () => {
+      const v = ref.current;
+      if (!v) return;
+      v.muted = !isSoundEnabled();
+    };
+    apply();
+    return onSoundEnable(apply);
+  }, []);
 
-  // Autoplay / pause based on activity (visible card in the feed).
+  // Autoplay / pause based on visibility.
   useEffect(() => {
     const v = ref.current;
     if (!v) return;
     if (active) {
-      // Always attempt muted-first to satisfy mobile autoplay policies,
-      // then restore user's mute preference once playback is going.
-      const wantedMuted = muted;
-      v.muted = true;
+      v.muted = !isSoundEnabled();
+      // First attempt: try with desired mute state.
       const p = v.play();
       if (p !== undefined) {
-        p.then(() => {
-          v.muted = wantedMuted;
-          setPlaying(true);
-        }).catch(() => {
-          // Last resort: keep muted so it still plays.
+        p.then(() => setPlaying(true)).catch(() => {
+          // Browser blocked it — fall back to muted autoplay.
           v.muted = true;
           v.play()
             .then(() => setPlaying(true))
@@ -94,7 +85,7 @@ function NativeVideoPlayer({
       v.pause();
       setPlaying(false);
     }
-  }, [active, muted]);
+  }, [active]);
 
   const togglePlay = useCallback(() => {
     const v = ref.current;
@@ -183,14 +174,9 @@ function NativeVideoPlayer({
       >
         <div className="flex items-center justify-between text-xs text-white/80">
           <span>{formatTime((progress / 100) * duration)}</span>
-          <div className="flex gap-2">
-            <button onClick={onToggleMute} aria-label={muted ? "Activer le son" : "Couper le son"}>
-              {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-            </button>
-            <button onClick={fullscreen} aria-label="Plein écran">
-              <Maximize2 className="h-4 w-4" />
-            </button>
-          </div>
+          <button onClick={fullscreen} aria-label="Plein écran">
+            <Maximize2 className="h-4 w-4" />
+          </button>
         </div>
         <div
           className="group relative h-1.5 cursor-pointer rounded-full bg-white/20"
@@ -216,19 +202,16 @@ function ytCommand(iframe: HTMLIFrameElement | null, func: string, args: unknown
   );
 }
 
-function YouTubePlayer({ ytId, active, muted, onToggleMute, onTap, onFirstPlay, poster, nearby }: YTProps) {
-  // Mount iframe as soon as the card is nearby (preloads). Stays mounted —
-  // we drive play/pause/mute via postMessage, never by remounting.
+function YouTubePlayer({ ytId, active, onTap, onFirstPlay, poster, nearby }: YTProps) {
   const shouldMount = active || nearby;
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const playedOnce = useRef(false);
 
-  // Drive play / pause when activity changes.
+  // Drive play / pause based on activity.
   useEffect(() => {
     if (!shouldMount) return;
     const t = window.setTimeout(() => {
       if (active) {
-        // Always (re)issue mute first so autoplay is accepted on mobile.
         ytCommand(iframeRef.current, "mute");
         ytCommand(iframeRef.current, "playVideo");
         if (!playedOnce.current) {
@@ -238,16 +221,20 @@ function YouTubePlayer({ ytId, active, muted, onToggleMute, onTap, onFirstPlay, 
       } else {
         ytCommand(iframeRef.current, "pauseVideo");
       }
-    }, 150); // give iframe a tick to be ready
+    }, 150);
     return () => window.clearTimeout(t);
   }, [active, shouldMount, onFirstPlay]);
 
-  // Mute toggle is a user-gesture-driven postMessage; no remount needed.
+  // Unmute as soon as the user has interacted (global gate).
   useEffect(() => {
     if (!shouldMount) return;
-    if (muted) ytCommand(iframeRef.current, "mute");
-    else ytCommand(iframeRef.current, "unMute");
-  }, [muted, shouldMount]);
+    const apply = () => {
+      if (isSoundEnabled()) ytCommand(iframeRef.current, "unMute");
+      else ytCommand(iframeRef.current, "mute");
+    };
+    apply();
+    return onSoundEnable(apply);
+  }, [shouldMount]);
 
   if (!shouldMount) {
     return (
@@ -284,13 +271,6 @@ function YouTubePlayer({ ytId, active, muted, onToggleMute, onTap, onFirstPlay, 
         allowFullScreen
         className="absolute inset-0 h-full w-full"
       />
-      <button
-        onClick={onToggleMute}
-        className="absolute right-3 top-3 z-10 rounded-full bg-black/60 p-2 text-white backdrop-blur-xl"
-        aria-label={muted ? "Activer le son" : "Couper le son"}
-      >
-        {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-      </button>
     </div>
   );
 }
