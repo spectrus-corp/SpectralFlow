@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { extractYouTubeId, youTubeThumbnail } from "@/lib/youtube";
 import { incrementViews, toggleLike, type FeedPost } from "@/lib/posts";
+import { toggleSubscription } from "@/lib/subscriptions";
 import { VideoPlayer } from "./video-player";
 import { HeartBurst, type BurstPoint } from "./heart-burst";
 
@@ -47,6 +48,7 @@ export function VideoCard({ post, active, nearby, onChange }: Props) {
   const { user } = useAuth();
   const [liked, setLiked] = useState(post.liked);
   const [likeCount, setLikeCount] = useState(post.likeCount);
+  const [following, setFollowing] = useState(post.following ?? false);
   const [bursts, setBursts] = useState<BurstPoint[]>([]);
   const [showComments, setShowComments] = useState(false);
   const tapTimer = useRef<number | null>(null);
@@ -55,7 +57,8 @@ export function VideoCard({ post, active, nearby, onChange }: Props) {
   useEffect(() => {
     setLiked(post.liked);
     setLikeCount(post.likeCount);
-  }, [post.liked, post.likeCount]);
+    setFollowing(post.following ?? false);
+  }, [post.liked, post.likeCount, post.following]);
 
   const ytId = extractYouTubeId(post.youtube_url);
   const isVideo = post.media_type === "video" && !!post.media_url;
@@ -78,6 +81,21 @@ export function VideoCard({ post, active, nearby, onChange }: Props) {
       toast.error("Action impossible");
     }
   }, [liked, post.id, post.likeCount, user]);
+
+  const toggleFollow = useCallback(async () => {
+    if (!user) {
+      toast.error("Connecte-toi pour t'abonner");
+      return;
+    }
+    const next = !following;
+    setFollowing(next);
+    try {
+      await toggleSubscription(user.id, post.user_id, following);
+    } catch (e) {
+      setFollowing(following);
+      toast.error("Action impossible");
+    }
+  }, [following, post.user_id, user]);
 
   const triggerHeartAt = (x: number, y: number) => {
     const id = ++burstId.current;
@@ -218,17 +236,24 @@ export function VideoCard({ post, active, nearby, onChange }: Props) {
 
       {/* Bottom info overlay */}
       <div className="absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-4 pb-24 pt-16 text-white">
-        <div className="flex items-center gap-3">
-          <Avatar className="h-10 w-10 ring-2 ring-primary">
-            <AvatarImage src={post.profile?.avatar_url ?? undefined} />
-            <AvatarFallback className="bg-primary/20 text-primary">{initial}</AvatarFallback>
-          </Avatar>
-          <div className="min-w-0">
-            <p className="truncate text-sm font-bold">@{post.profile?.username}</p>
-            <p className="text-xs opacity-70">
-              {formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: fr })}
-            </p>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <Avatar className="h-10 w-10 ring-2 ring-primary">
+              <AvatarImage src={post.profile?.avatar_url ?? undefined} />
+              <AvatarFallback className="bg-primary/20 text-primary">{initial}</AvatarFallback>
+            </Avatar>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-bold">@{post.profile?.username}</p>
+              <p className="text-xs opacity-70">
+                {formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: fr })}
+              </p>
+            </div>
           </div>
+          {user && !isMine && (
+            <Button size="sm" variant={following ? "secondary" : "outline"} onClick={toggleFollow}>
+              {following ? "Abonné" : "S'abonner"}
+            </Button>
+          )}
         </div>
         {post.content && (
           <p className="mt-3 line-clamp-3 text-sm leading-relaxed drop-shadow-md">

@@ -244,6 +244,39 @@ export type Database = {
         }
         Relationships: []
       }
+      subscriptions: {
+        Row: {
+          created_at: string
+          subscriber_id: string
+          target_id: string
+        }
+        Insert: {
+          created_at?: string
+          subscriber_id: string
+          target_id: string
+        }
+        Update: {
+          created_at?: string
+          subscriber_id?: string
+          target_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_subscriber_id_fkey"
+            columns: ["subscriber_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_target_id_fkey"
+            columns: ["target_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

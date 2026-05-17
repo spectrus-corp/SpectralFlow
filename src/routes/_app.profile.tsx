@@ -47,18 +47,19 @@ function ProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [stats, setStats] = useState({ posts: 0, likes: 0 });
+  const [stats, setStats] = useState({ posts: 0, likes: 0, subscriptions: 0 });
   const fileRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
     if (!user) return;
     const { data } = await supabase.from("profiles").select("*").eq("id", user.id).single();
     setProfile(data);
-    const [{ count: pc }, { count: lc }] = await Promise.all([
+    const [{ count: pc }, { count: lc }, { count: sc }] = await Promise.all([
       supabase.from("posts").select("*", { count: "exact", head: true }).eq("user_id", user.id),
       supabase.from("likes").select("*", { count: "exact", head: true }).eq("user_id", user.id),
+      supabase.from("subscriptions").select("*", { count: "exact", head: true }).eq("subscriber_id", user.id),
     ]);
-    setStats({ posts: pc ?? 0, likes: lc ?? 0 });
+    setStats({ posts: pc ?? 0, likes: lc ?? 0, subscriptions: sc ?? 0 });
     setLoading(false);
   }, [user]);
 
@@ -152,6 +153,10 @@ function ProfilePage() {
           <div className="rounded-xl border border-border bg-background/50 p-3">
             <p className="text-2xl font-bold text-neon">{stats.likes}</p>
             <p className="text-xs text-muted-foreground">Likes envoyés</p>
+          </div>
+          <div className="rounded-xl border border-border bg-background/50 p-3">
+            <p className="text-2xl font-bold text-neon">{stats.subscriptions}</p>
+            <p className="text-xs text-muted-foreground">Abonnements</p>
           </div>
         </div>
       </div>

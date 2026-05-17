@@ -22,6 +22,7 @@ export interface FeedPost {
   likeCount: number;
   liked: boolean;
   commentCount: number;
+  following?: boolean;
 }
 
 export interface PublishPostPayload {
@@ -126,6 +127,16 @@ export async function fetchFeedPosts(
   const posts = (rawPosts ?? []) as any[];
   if (!posts.length) return [];
 
+  const followedIds = new Set<string>();
+  if (userId) {
+    const { data: subs, error: subsError } = await supabase
+      .from("subscriptions")
+      .select("target_id")
+      .eq("subscriber_id", userId);
+    if (subsError) throw subsError;
+    (subs ?? []).forEach((row: { target_id: string }) => followedIds.add(row.target_id));
+  }
+
   const ids = posts.map((p) => p.id);
   const [likesRes, commentsRes] = await Promise.all([
     supabase.from("likes").select("post_id,user_id").in("post_id", ids.length ? ids : [EMPTY_UUID]),
@@ -159,6 +170,7 @@ export async function fetchFeedPosts(
     likeCount: likesByPost.get(p.id)?.count ?? 0,
     liked: likesByPost.get(p.id)?.mine ?? false,
     commentCount: commentsByPost.get(p.id) ?? 0,
+    following: userId ? followedIds.has(p.user_id) : false,
   }));
 }
 
@@ -194,6 +206,7 @@ export async function fetchPostById(id: string, userId: string | null): Promise<
     likeCount: likes.length,
     liked: !!userId && likes.some((l) => l.user_id === userId),
     commentCount: (commentsRes.data ?? []).length,
+    following: false,
   };
 }
 

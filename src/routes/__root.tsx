@@ -10,9 +10,10 @@ import {
 import { useEffect } from "react";
 
 import appCss from "../styles.css?url";
-import { AuthProvider } from "@/hooks/use-auth";
+import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 function NotFoundComponent() {
   return (
@@ -173,9 +174,112 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <NotificationListener />
         <Outlet />
         <Toaster />
       </AuthProvider>
     </QueryClientProvider>
   );
+}
+
+function NotificationListener() {
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (!user) return;
+
+    if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission().catch(() => {});
+    }
+
+    const followedIds = new Set<string>();
+    const conversationIds = new Set<string>();
+
+    const notify = (title: string, body: string) => {
+      toast(title);
+      if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+        new Notification(title, { body });
+      }
+    };
+
+    const loadState = async () => {
+      const [subsRes, convsRes] = await Promise.all([
+        supabase.from("subscriptions").select("target_id").eq("subscriber_id", user.id),
+        supabase
+          .from("conversations")
+          .select("id,user_a,user_b")
+          .or(`user_a.eq.${user.id},user_b.eq.${user.id}`),
+      ]);
+
+      if (subsRes.error || convsRes.error) return;
+      (subsRes.data ?? []).forEach((row: { target_id: string }) => followedIds.add(row.target_id));
+      (convsRes.data ?? []).forEach((row: { id: string }) => conversationIds.add(row.id));
+    };
+
+    loadState();
+
+    const channel = supabase.channel(`notifications-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "posts" },
+        (payload) => {
+          const newPost = payload.new as { user_id: string; id: string };
+          if (!newPost || newPost.user_id === user.id) return;
+          if (!followedIds.has(newPost.user_id)) return;
+          notify("Nouveau post d'un abonnement", "Un utilisateur que tu suis vient de publier une nouvelle vidéo.");
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "messages" },
+        async (payload) => {
+          const message = payload.new as { conversation_id: string; sender_id: string; content: string };
+          if (!message || message.sender_id === user.id) return;
+          if (!conversationIds.has(message.conversation_id)) return;
+
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("username")
+            .eq("id", message.sender_id)
+            .maybeSingle();
+
+          const senderName = profile?.username ? `@${profile.username}` : "quelqu'un";
+          notify(`Nouveau message de ${senderName}`, "Ouvre la messagerie pour lire et répondre.");
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "conversations" },
+        (payload) => {
+          const conversation = payload.new as { id: string; user_a: string; user_b: string };
+          if (!conversation) return;
+          if (conversation.user_a === user.id || conversation.user_b === user.id) {
+            conversationIds.add(conversation.id);
+          }
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "subscriptions", filter: `subscriber_id=eq.${user.id}` },
+        (payload) => {
+          const subscription = payload.new as { target_id: string };
+          if (subscription?.target_id) followedIds.add(subscription.target_id);
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "subscriptions", filter: `subscriber_id=eq.${user.id}` },
+        (payload) => {
+          const subscription = payload.old as { target_id: string };
+          if (subscription?.target_id) followedIds.delete(subscription.target_id);
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
+  return null;
 }
