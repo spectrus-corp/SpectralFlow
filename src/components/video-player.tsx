@@ -212,8 +212,8 @@ function YouTubePlayer({ ytId, active, onTap, onFirstPlay, poster, nearby }: YTP
     if (!shouldMount) return;
     const t = window.setTimeout(() => {
       if (active) {
-        ytCommand(iframeRef.current, "mute");
         ytCommand(iframeRef.current, "playVideo");
+        ytCommand(iframeRef.current, "unMute");
         if (!playedOnce.current) {
           playedOnce.current = true;
           onFirstPlay?.();
@@ -225,12 +225,11 @@ function YouTubePlayer({ ytId, active, onTap, onFirstPlay, poster, nearby }: YTP
     return () => window.clearTimeout(t);
   }, [active, shouldMount, onFirstPlay]);
 
-  // Unmute as soon as the user has interacted (global gate).
+  // Keep YouTube unmuted whenever the iframe is mounted.
   useEffect(() => {
     if (!shouldMount) return;
     const apply = () => {
-      if (isSoundEnabled()) ytCommand(iframeRef.current, "unMute");
-      else ytCommand(iframeRef.current, "mute");
+      ytCommand(iframeRef.current, "unMute");
     };
     apply();
     return onSoundEnable(apply);
@@ -262,7 +261,7 @@ function YouTubePlayer({ ytId, active, onTap, onFirstPlay, poster, nearby }: YTP
         ref={iframeRef}
         src={youTubeEmbedUrl(ytId, {
           autoplay: true,
-          mute: true,
+          mute: false,
           controls: true,
           loop: true,
         })}
