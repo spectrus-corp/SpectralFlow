@@ -27,17 +27,19 @@ interface YTProps extends BaseProps {
 export type VideoPlayerProps = UploadProps | YTProps;
 
 /**
- * Unified video player:
- * - autoplay when `active`, pause when not visible
- * - tap = play/pause toggle (also fires onTap for double-tap likes)
- * - mute / unmute control mirrors parent state
- * - progress bar + scrub for native uploads
- * - YouTube uses iframe with autoplay/mute params, no scrub
+ * Unified, cross-device immersive video player.
+ *
+ * Cross-browser autoplay rules respected:
+ * - Native <video>: must be muted + playsInline + autoplay attribute for iOS Safari.
+ * - YouTube iframe: must start with mute=1; we toggle sound via the IFrame
+ *   JS API postMessage protocol (no remount, no playback restart).
  */
 export function VideoPlayer(props: VideoPlayerProps) {
   if (props.kind === "youtube") return <YouTubePlayer {...props} />;
   return <NativeVideoPlayer {...props} />;
 }
+
+/* ---------- Native uploads ---------- */
 
 function NativeVideoPlayer({
   src,
@@ -57,49 +59,56 @@ function NativeVideoPlayer({
   const [showControlOverlay, setShowControlOverlay] = useState(false);
   const playedOnce = useRef(false);
 
-  // Sync mute
+  // Imperative mute sync — set before any play() call so iOS accepts autoplay.
   useEffect(() => {
-    if (ref.current) ref.current.muted = muted;
+    const v = ref.current;
+    if (!v) return;
+    v.muted = muted;
+    if (muted) v.setAttribute("muted", "");
+    else v.removeAttribute("muted");
   }, [muted]);
 
-  // Autoplay when active, pause (but keep buffer) when not
+  // Autoplay / pause based on activity (visible card in the feed).
   useEffect(() => {
     const v = ref.current;
     if (!v) return;
     if (active) {
-      const promise = v.play();
-      if (promise !== undefined) {
-        promise.then(() => setPlaying(true)).catch(() => setPlaying(false));
+      // Always attempt muted-first to satisfy mobile autoplay policies,
+      // then restore user's mute preference once playback is going.
+      const wantedMuted = muted;
+      v.muted = true;
+      const p = v.play();
+      if (p !== undefined) {
+        p.then(() => {
+          v.muted = wantedMuted;
+          setPlaying(true);
+        }).catch(() => {
+          // Last resort: keep muted so it still plays.
+          v.muted = true;
+          v.play()
+            .then(() => setPlaying(true))
+            .catch(() => setPlaying(false));
+        });
       }
     } else {
       v.pause();
       setPlaying(false);
     }
-  }, [active]);
-
-  useEffect(() => {
-    const v = ref.current;
-    if (!v || !active) return;
-    if (!playing) {
-      const promise = v.play();
-      if (promise !== undefined) {
-        promise.then(() => setPlaying(true)).catch(() => {});
-      }
-    }
-  }, [active, muted, playing]);
+  }, [active, muted]);
 
   const togglePlay = useCallback(() => {
     const v = ref.current;
     if (!v) return;
     if (v.paused) {
-      v.play();
-      setPlaying(true);
+      v.play()
+        .then(() => setPlaying(true))
+        .catch(() => {});
     } else {
       v.pause();
       setPlaying(false);
     }
     setShowControlOverlay(true);
-    setTimeout(() => setShowControlOverlay(false), 600);
+    window.setTimeout(() => setShowControlOverlay(false), 600);
   }, []);
 
   const onTimeUpdate = () => {
@@ -137,14 +146,14 @@ function NativeVideoPlayer({
         loop
         autoPlay
         playsInline
-        muted={muted}
+        // @ts-expect-error iOS-specific attribute
+        webkit-playsinline="true"
+        muted
         preload={nearby ? "auto" : "metadata"}
         className="h-full w-full object-contain"
         onLoadedMetadata={(e) => {
           setDuration(e.currentTarget.duration);
-          if (active) {
-            e.currentTarget.play().catch(() => {});
-          }
+          if (active) e.currentTarget.play().catch(() => {});
         }}
         onTimeUpdate={onTimeUpdate}
         onPlay={() => {
@@ -157,7 +166,6 @@ function NativeVideoPlayer({
         onPause={() => setPlaying(false)}
       />
 
-      {/* Big play/pause icon overlay */}
       {(showControlOverlay || !playing) && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
           <div className="rounded-full bg-black/50 p-5 backdrop-blur-xl animate-scale-in">
@@ -170,7 +178,6 @@ function NativeVideoPlayer({
         </div>
       )}
 
-      {/* Bottom controls */}
       <div
         className="absolute inset-x-0 bottom-0 z-10 flex flex-col gap-1 bg-gradient-to-t from-black/70 to-transparent px-3 pb-3 pt-8"
         onClick={(e) => e.stopPropagation()}
@@ -200,14 +207,48 @@ function NativeVideoPlayer({
   );
 }
 
-function YouTubePlayer({ ytId, active, muted, onToggleMute, onTap, poster, nearby }: YTProps) {
-  // Mount iframe as soon as the card is nearby (preload). Re-mount when active/mute
-  // toggles so YouTube re-applies autoplay+mute params reliably.
+/* ---------- YouTube embed ---------- */
+
+function ytCommand(iframe: HTMLIFrameElement | null, func: string, args: unknown[] = []) {
+  if (!iframe || !iframe.contentWindow) return;
+  iframe.contentWindow.postMessage(
+    JSON.stringify({ event: "command", func, args }),
+    "*",
+  );
+}
+
+function YouTubePlayer({ ytId, active, muted, onToggleMute, onTap, onFirstPlay, poster, nearby }: YTProps) {
+  // Mount iframe as soon as the card is nearby (preloads). Stays mounted —
+  // we drive play/pause/mute via postMessage, never by remounting.
   const shouldMount = active || nearby;
-  const [tick, setTick] = useState(0);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const playedOnce = useRef(false);
+
+  // Drive play / pause when activity changes.
   useEffect(() => {
-    setTick((t) => t + 1);
-  }, [active, muted]);
+    if (!shouldMount) return;
+    const t = window.setTimeout(() => {
+      if (active) {
+        // Always (re)issue mute first so autoplay is accepted on mobile.
+        ytCommand(iframeRef.current, "mute");
+        ytCommand(iframeRef.current, "playVideo");
+        if (!playedOnce.current) {
+          playedOnce.current = true;
+          onFirstPlay?.();
+        }
+      } else {
+        ytCommand(iframeRef.current, "pauseVideo");
+      }
+    }, 150); // give iframe a tick to be ready
+    return () => window.clearTimeout(t);
+  }, [active, shouldMount, onFirstPlay]);
+
+  // Mute toggle is a user-gesture-driven postMessage; no remount needed.
+  useEffect(() => {
+    if (!shouldMount) return;
+    if (muted) ytCommand(iframeRef.current, "mute");
+    else ytCommand(iframeRef.current, "unMute");
+  }, [muted, shouldMount]);
 
   if (!shouldMount) {
     return (
@@ -232,10 +273,10 @@ function YouTubePlayer({ ytId, active, muted, onToggleMute, onTap, poster, nearb
   return (
     <div className="relative h-full w-full bg-black">
       <iframe
-        key={tick}
+        ref={iframeRef}
         src={youTubeEmbedUrl(ytId, {
-          autoplay: active,
-          mute: muted,
+          autoplay: true,
+          mute: true,
           controls: true,
           loop: true,
         })}
@@ -244,7 +285,6 @@ function YouTubePlayer({ ytId, active, muted, onToggleMute, onTap, poster, nearb
         allowFullScreen
         className="absolute inset-0 h-full w-full"
       />
-      {/* Mute toggle overlay (YouTube hides own mute behind controls) */}
       <button
         onClick={onToggleMute}
         className="absolute right-3 top-3 z-10 rounded-full bg-black/60 p-2 text-white backdrop-blur-xl"
